@@ -10,24 +10,24 @@ namespace InfluxDb.Extensions
     [DataContract]
     public class PageResult<TData> {
 
-        public PageResult(Paging page) {
+        public PageResult (Paging page) {
             Page = page;
         }
 
-        public PageResult(Paging page, IEnumerable<TData> data) : this(page) {
+        public PageResult (Paging page, IEnumerable<TData> data) : this (page) {
             Values = data;
         }
 
         /// <summary>
         /// 分页信息
         /// </summary>
-        [DataMember(Name = "page")]
+        [DataMember (Name = "page")]
         public Paging Page { get; }
 
         /// <summary>
         /// 分页数据
         /// </summary>
-        [DataMember(Name = "values")]
+        [DataMember (Name = "values")]
         public IEnumerable<TData> Values { get; }
 
     }

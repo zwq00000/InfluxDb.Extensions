@@ -51,7 +51,7 @@ namespace InfluxDb.Extensions {
             return new InfluxDbClient (endpointUri: Url,
                 username: Username,
                 password: Password,
-                influxVersion: InfluxDbVersion.v_1_3);
+                influxVersion: InfluxDbVersion.Latest);
         }
 
         #region Overrides of Object

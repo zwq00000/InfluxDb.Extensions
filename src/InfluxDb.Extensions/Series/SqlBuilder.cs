@@ -223,6 +223,7 @@ namespace InfluxDb.Extensions {
 
         /// <summary>
         /// 生成 Count Sql
+        /// "Count({field}) AS COUNT"
         /// </summary>
         /// <returns></returns>
         public string ToCount () {
@@ -230,6 +231,12 @@ namespace InfluxDb.Extensions {
             return $"SELECT COUNT({field}) AS COUNT From {_table} {ToWhereClause()}";
         }
 
+        /// <summary>
+        /// 生成 limit/offset Sql 语句
+        /// </summary>
+        /// <param name="count">限制返回的数量</param>
+        /// <param name="offset">偏移量</param>
+        /// <returns></returns>
         public string ToLimitAndOffset (int count, int offset) {
             var builder = BuildSql ();
             builder.Append ($"  LIMIT {count} OFFSET {offset}").Append (ToTimeZoneClause ());
