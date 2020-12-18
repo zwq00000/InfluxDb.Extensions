@@ -79,7 +79,7 @@ namespace InfluxDb.Extensions {
         }
 
         /// <summary>
-        /// 计算数量
+        /// 根据分页参数获取 查询分页结果
         /// </summary>
         /// <param name="sqlBuilder"></param>
         /// <param name="context"></param>
@@ -99,7 +99,7 @@ namespace InfluxDb.Extensions {
         }
 
         /// <summary>
-        /// 计算数量
+        /// 根据分页参数获取 查询分页结果
         /// </summary>
         /// <param name="sqlBuilder">SqlBuilder</param>
         /// <param name="context">SerieContext</param>
