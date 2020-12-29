@@ -2,7 +2,8 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests {
+namespace InfluxDb.Extensions.Tests
+{
     public class ISerieContextFactoryTests {
         private readonly TestFactory factory;
         private readonly ITestOutputHelper output;
@@ -28,9 +29,9 @@ namespace InfluxDb.Extensions.Tests {
         [Fact]
         public async Task TestGetMeasurementsAsync () {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
-            var m = await contextFactory.GetMeasurementsAsync();
-            Assert.NotEmpty(m);
-            output .WriteLine(string.Join(",",m));
+            var m = await contextFactory.GetMeasurementsAsync ();
+            Assert.NotEmpty (m);
+            output.WriteLine (string.Join (",", m));
         }
 
         [Fact]
@@ -38,9 +39,9 @@ namespace InfluxDb.Extensions.Tests {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
             var context = await contextFactory.GetContextAsync ("Trace");
             Assert.NotNull (context);
-            await context.InitSerieAsync();
+            await context.InitSerieAsync ();
             var fileds = context.Fields;
-            Assert.NotEmpty(fileds);
+            Assert.NotEmpty (fileds);
         }
     }
 }

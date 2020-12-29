@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb.Models.Responses;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace InfluxDb.Extensions {
     /// <summary>
@@ -20,7 +22,7 @@ namespace InfluxDb.Extensions {
             if (tags.Length > 0) {
                 fields = tags.Concat (context.Fields);
             } else {
-                fields = new [] { "*" };
+                fields = context.Fields; //new [] { "*" };
             }
             return new SqlBuilder (fields, context.Measurement)
                 .TimeZone (context.TimeZone);
@@ -86,7 +88,7 @@ namespace InfluxDb.Extensions {
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<Serie>> ToPageSeriesAsync (this SqlBuilder sqlBuilder, ISerieContext context, int page = 1, int pageSize = 100) {
+        public static async Task<PageResult<Serie>> ToPageSeriesAsync (this SqlBuilder sqlBuilder, ISerieContext context, int page = 1, int pageSize = 100) {
             if (page < 1) {
                 page = 1;
             }
@@ -95,7 +97,8 @@ namespace InfluxDb.Extensions {
             }
             var count = await sqlBuilder.GetCountAsync (context);
             var sql = sqlBuilder.ToLimitAndOffset (pageSize, (page - 1) * pageSize);
-            return await context.QueryAsync (sql);
+            var values = await context.QueryAsync (sql);
+            return new PageResult<Serie> (new Paging (count, pageSize, page), values);
         }
 
         /// <summary>
@@ -114,6 +117,83 @@ namespace InfluxDb.Extensions {
             var sql = sqlBuilder.ToLimitAndOffset (paging.PageSize, (paging.Page - 1) * paging.PageSize);
             var values = await context.QueryAsync (sql);
             return new PageResult<Serie> (paging, values);
+        }
+
+        public static async Task WriteToJsonAsync (this PageResult<Serie> pageResult, JsonWriter writer, NamingStrategy naming = null) {
+            await writer.WriteStartObjectAsync ();
+
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (pageResult.Page)));
+            await pageResult.Page.WriteToJsonAsync (writer, naming);
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (pageResult.Values)));
+            await pageResult.Values.First ().WriteToJsonAsync (writer, naming);
+            await writer.WriteEndObjectAsync ();
+            await writer.FlushAsync ();
+        }
+
+        private static string GetName (this NamingStrategy naming, string name) {
+            return naming != null? naming.GetPropertyName (name, false) : name;
+        }
+
+        private static async Task WriteToJsonAsync (this Paging pageing, JsonWriter writer, NamingStrategy naming = null) {
+            await writer.WriteStartObjectAsync ();
+
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Page)));
+            await writer.WriteValueAsync (pageing.Page);
+
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Pages)));
+            await writer.WriteValueAsync (pageing.Pages);
+
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.PageSize)));
+            await writer.WriteValueAsync (pageing.PageSize);
+
+            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Total)));
+            await writer.WriteValueAsync (pageing.Total);
+
+            await writer.WriteEndObjectAsync ();
+        }
+
+        public static void WriteToJson (this Serie serie, JsonWriter writer, NamingStrategy naming = null) {
+            var names = serie.Columns.Select (n => naming.GetName (n)).ToArray ();
+
+            writer.WriteStartArray ();
+
+            foreach (var value in serie.Values) {
+                writer.WriteStartObject ();
+                for (var i = 0; i < value.Count; i++) {
+                    writer.WritePropertyName (names[i]);
+                    writer.WriteValue (value[i]);
+                }
+
+                writer.WriteEndObject ();
+            }
+            writer.WriteEndArray ();
+        }
+
+        public static async Task WriteToJsonAsync (this Serie serie, JsonWriter writer, NamingStrategy naming = null) {
+            var names = serie.Columns.Select (n => naming.GetName (n)).ToArray ();
+
+            await writer.WriteStartArrayAsync ();
+
+            foreach (var value in serie.Values) {
+                await writer.WriteStartObjectAsync ();
+
+                foreach(var tag in serie.Tags){
+                    writer.WritePropertyName(tag.Key);
+                    writer.WriteValue(tag.Value);
+                }
+
+                for (var i = 0; i < value.Count; i++) {
+                    var val = value[i];
+                    //skip null value
+                    if (val != null) {
+                        await writer.WritePropertyNameAsync (names[i]);
+                        await writer.WriteValueAsync (val);
+                    }
+                }
+
+                await writer.WriteEndObjectAsync ();
+            }
+            await writer.WriteEndArrayAsync ();
         }
     }
 }
