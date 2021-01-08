@@ -66,7 +66,7 @@ namespace InfluxDb.Extensions {
         public string FirstField { get; private set; }
 
         /// <summary>
-        /// 获取 <see cref="ISerieClientModule"/>
+        /// 获取 <see cref="IInfluxDbClient"/>
         /// </summary>
         /// <value></value>
         public IInfluxDbClient Client { get => _client; }
