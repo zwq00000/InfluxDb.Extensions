@@ -4,7 +4,10 @@ using InfluxData.Net.InfluxDb.Models.Responses;
 using static System.Convert;
 
 namespace InfluxDb.Extensions {
-    internal static class InfluxDbQueryExtensions {
+    /// <summary>
+    /// Infflux DB 数据查询扩展方法
+    /// </summary>
+    public static class InfluxDbQueryExtensions {
         /// <summary>
         /// 生成指定日期 当日范围的 Where 子句, [date.Date,date.Date.AddDays(1)]
         /// </summary>
@@ -24,7 +27,7 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="start"></param>
         /// <returns></returns>
-        public static string ToStartTimeWhereClause(this DateTime start){
+        public static string ToStartTimeWhereClause (this DateTime start) {
             return $"time >= '{start.ToRfc3339()}'";
         }
 

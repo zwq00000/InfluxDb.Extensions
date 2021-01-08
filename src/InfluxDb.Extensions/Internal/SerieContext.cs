@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb;
+using InfluxData.Net.InfluxDb.ClientModules;
 using InfluxData.Net.InfluxDb.Models.Responses;
 using Microsoft.Extensions.Logging;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
 
     /// <summary>
     /// Serie query Context
@@ -64,6 +64,12 @@ namespace InfluxDb.Extensions
         /// </summary>
         /// <value></value>
         public string FirstField { get; private set; }
+
+        /// <summary>
+        /// 获取 <see cref="ISerieClientModule"/>
+        /// </summary>
+        /// <value></value>
+        public IInfluxDbClient Client { get => _client; }
 
         /// <summary>
         /// initialize SerieContext ,fill Fields and Tags

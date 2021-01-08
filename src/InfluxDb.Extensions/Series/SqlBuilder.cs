@@ -114,6 +114,22 @@ namespace InfluxDb.Extensions {
             return this;
         }
 
+        public SqlBuilder Start (DateTime start) {
+            return Where ($"time >= '{start.ToRfc3339()}'");
+        }
+
+        public SqlBuilder StartDate (DateTime startDate) {
+            return Where ($"time >= '{startDate.Date.ToRfc3339()}'");
+        }
+
+        public SqlBuilder EndWith (DateTime endtime) {
+            return Where ($"time < '{endtime.ToRfc3339()}'");
+        }
+
+        public SqlBuilder EndWith (TimeSpan time) {
+            return Where ($"time < now()-{time.TotalSeconds}s");
+        }
+
         public SqlBuilder OrderBy (params string[] fields) {
             if (_orderbyClause == null) {
                 _orderbyClause = new List<string> (fields.Where (f => !string.IsNullOrEmpty (f)));
