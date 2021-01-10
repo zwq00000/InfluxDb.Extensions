@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace InfluxDb.Extensions {
+namespace InfluxDb.Extensions
+{
     /// <summary>
     /// Influx DB 查询构建器
     /// </summary>
@@ -172,11 +173,11 @@ namespace InfluxDb.Extensions {
         /// 计算结果时，所有返回的数据都必须在查询的显式时间范围内出现，但GROUP BY间隔将基于预设的时间范围。
         /// </remarks>
         /// <returns></returns>
-        public SqlBuilder GroupByTime (int time, string timeunit) {
+        public SqlBuilder GroupByTime (int duration, string durationUnit) {
             if (_groups == null) {
                 _groups = new List<string> ();
             }
-            this._groups.Add ($"time({time}{timeunit})");
+            this._groups.Add ($"time({duration}{durationUnit})");
             return this;
         }
 
@@ -189,7 +190,7 @@ namespace InfluxDb.Extensions {
             if (_groups == null) {
                 _groups = new List<string> ();
             }
-            this._groups.Add ($"time({duration.ToTimeInterval()})");
+            this._groups.Add ($"time({duration.ToDuration()})");
             return this;
         }
 

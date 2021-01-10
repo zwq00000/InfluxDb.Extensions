@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb.Models.Responses;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace InfluxDb.Extensions {
+namespace InfluxDb.Extensions
+{
     /// <summary>
     /// Influx Serial Query 扩展方法
     /// </summary>
@@ -195,5 +197,5 @@ namespace InfluxDb.Extensions {
             }
             await writer.WriteEndArrayAsync ();
         }
-    }
+    }    
 }
