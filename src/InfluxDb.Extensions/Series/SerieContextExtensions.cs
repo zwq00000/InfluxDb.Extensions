@@ -32,7 +32,7 @@ namespace InfluxDb.Extensions
 
         public static SqlBuilder BuildMeanQuery (this ISerieContext context, TimeSpan interval) {
             return new SqlBuilder (context.Fields.Select (f => $"MEAN({f}) AS {f}"), context.Measurement)
-                .GroupBy (context.BuildTimeGroup (interval))
+                .GroupByTime(interval)
                 .TimeZone (context.TimeZone);
         }
 
@@ -52,13 +52,6 @@ namespace InfluxDb.Extensions
                 .Where (whereClause)
                 .GroupBy (tags)
                 .TimeZone (context.TimeZone);
-        }
-
-        private static string BuildTimeGroup (this ISerieContext context, TimeSpan interval) {
-            if (interval.TotalSeconds <= 1) {
-                return "time(1s)";
-            }
-            return $"time({interval.TotalSeconds:F0}s)";
         }
 
         /// <summary>
