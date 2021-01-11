@@ -24,5 +24,13 @@ namespace InfluxDb.Extensions.Tests
             whereClause = time.ToWhereClause ();
             Assert.Equal ($"time >= '{time.ToRfc3339()}'", whereClause);
         }
+
+        [Fact]
+        public void TestToDuration()
+        {
+            var dur = TimeSpan.FromMinutes(3);
+            Assert.Equal("3m", dur.ToDuration());
+
+        }
     }
 }
