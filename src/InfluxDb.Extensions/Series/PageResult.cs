@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
     /// <summary>
     /// 数据分页结果
     /// </summary>

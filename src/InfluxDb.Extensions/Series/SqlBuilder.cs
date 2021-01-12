@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using InfluxData.Net.InfluxDb.Enums;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
     /// <summary>
     /// Influx DB 查询构建器
     /// </summary>
@@ -123,12 +123,22 @@ namespace InfluxDb.Extensions
             return Where ($"time >= '{startDate.Date.ToRfc3339()}'");
         }
 
+        /// <summary>
+        /// add end time condition where "time &lt;= endtime (rfc3339)"
+        /// </summary>
+        /// <param name="endtime"></param>
+        /// <returns></returns>
         public SqlBuilder EndWith (DateTime endtime) {
-            return Where ($"time < '{endtime.ToRfc3339()}'");
+            return Where ($"time <= '{endtime.ToRfc3339()}'");
         }
 
+        /// <summary>
+        /// add time where "time &lt;= now()-duration"
+        /// </summary>
+        /// <param name="time"></param>
+        /// <returns></returns>
         public SqlBuilder EndWith (TimeSpan time) {
-            return Where ($"time < now()-{time.TotalSeconds}s");
+            return Where ($"time < now()-{time.ToDuration()}");
         }
 
         public SqlBuilder OrderBy (params string[] fields) {
@@ -207,6 +217,13 @@ namespace InfluxDb.Extensions
             }
             return this;
         }
+
+        public SqlBuilder Fill (FillType value) {
+            this._fillValue = value.ToString();
+            return this;
+        }
+
+        
 
         /// <summary>
         /// Fill with a specified value

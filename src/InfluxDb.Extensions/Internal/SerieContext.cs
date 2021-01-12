@@ -11,7 +11,7 @@ namespace InfluxDb.Extensions {
     /// <summary>
     /// Serie query Context
     /// </summary>
-    public class SerieContext : ISerieContext {
+    internal class SerieContext : ISerieContext {
         private IInfluxDbClient _client;
         private readonly ILogger _logger;
 

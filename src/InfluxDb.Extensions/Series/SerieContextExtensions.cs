@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb.Models.Responses;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
 namespace InfluxDb.Extensions
 {
@@ -22,9 +19,9 @@ namespace InfluxDb.Extensions
         public static SqlBuilder BuildQuery (this ISerieContext context, params string[] tags) {
             IEnumerable<string> fields;
             if (tags.Length > 0) {
-                fields = tags.Concat (context.Fields);
+                fields = tags;
             } else {
-                fields = context.Fields; //new [] { "*" };
+                fields = context.Fields;;
             }
             return new SqlBuilder (fields, context.Measurement)
                 .TimeZone (context.TimeZone);
@@ -32,7 +29,7 @@ namespace InfluxDb.Extensions
 
         public static SqlBuilder BuildMeanQuery (this ISerieContext context, TimeSpan interval) {
             return new SqlBuilder (context.Fields.Select (f => $"MEAN({f}) AS {f}"), context.Measurement)
-                .GroupByTime(interval)
+                .GroupByTime (interval)
                 .TimeZone (context.TimeZone);
         }
 
@@ -114,81 +111,5 @@ namespace InfluxDb.Extensions
             return new PageResult<Serie> (paging, values);
         }
 
-        public static async Task WriteToJsonAsync (this PageResult<Serie> pageResult, JsonWriter writer, NamingStrategy naming = null) {
-            await writer.WriteStartObjectAsync ();
-
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (pageResult.Page)));
-            await pageResult.Page.WriteToJsonAsync (writer, naming);
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (pageResult.Values)));
-            await pageResult.Values.First ().WriteToJsonAsync (writer, naming);
-            await writer.WriteEndObjectAsync ();
-            await writer.FlushAsync ();
-        }
-
-        private static string GetName (this NamingStrategy naming, string name) {
-            return naming != null? naming.GetPropertyName (name, false) : name;
-        }
-
-        private static async Task WriteToJsonAsync (this Paging pageing, JsonWriter writer, NamingStrategy naming = null) {
-            await writer.WriteStartObjectAsync ();
-
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Page)));
-            await writer.WriteValueAsync (pageing.Page);
-
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Pages)));
-            await writer.WriteValueAsync (pageing.Pages);
-
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.PageSize)));
-            await writer.WriteValueAsync (pageing.PageSize);
-
-            await writer.WritePropertyNameAsync (naming.GetName (nameof (Paging.Total)));
-            await writer.WriteValueAsync (pageing.Total);
-
-            await writer.WriteEndObjectAsync ();
-        }
-
-        public static void WriteToJson (this Serie serie, JsonWriter writer, NamingStrategy naming = null) {
-            var names = serie.Columns.Select (n => naming.GetName (n)).ToArray ();
-
-            writer.WriteStartArray ();
-
-            foreach (var value in serie.Values) {
-                writer.WriteStartObject ();
-                for (var i = 0; i < value.Count; i++) {
-                    writer.WritePropertyName (names[i]);
-                    writer.WriteValue (value[i]);
-                }
-
-                writer.WriteEndObject ();
-            }
-            writer.WriteEndArray ();
-        }
-
-        public static async Task WriteToJsonAsync (this Serie serie, JsonWriter writer, NamingStrategy naming = null) {
-            var names = serie.Columns.Select (n => naming.GetName (n)).ToArray ();
-
-            await writer.WriteStartArrayAsync ();
-
-            foreach (var value in serie.Values) {
-                await writer.WriteStartObjectAsync ();
-
-                foreach(var tag in serie.Tags){
-                    writer.WritePropertyName(tag.Key);
-                    writer.WriteValue(tag.Value);
-                }
-
-                for (var i = 0; i < value.Count; i++) {
-                    var val = value[i];
-                    //skip null value
-                    if (val != null) {
-                        await writer.WritePropertyNameAsync (names[i]);
-                        await writer.WriteValueAsync (val);
-                    }
-                }
-
-                await writer.WriteEndObjectAsync ();
-            }
-            await writer.WriteEndArrayAsync ();
-        }
-    }    
+    }
 }
