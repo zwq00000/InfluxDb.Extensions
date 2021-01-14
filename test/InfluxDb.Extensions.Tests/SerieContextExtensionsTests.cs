@@ -12,7 +12,8 @@ using Newtonsoft.Json.Serialization;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests {
+namespace InfluxDb.Extensions.Tests
+{
     public class SerieContextExtensionsTests {
         private readonly TestFactory factory;
         private readonly ITestOutputHelper output;
@@ -182,34 +183,6 @@ namespace InfluxDb.Extensions.Tests {
                         array[i] = Convert.ToDouble (list[i]);
                     }
                 }
-            }
-        }
-
-    }
-
-    public class TestMock {
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-
-        public DateTime Time { get; set; }
-    }
-
-    internal static class TestHelper {
-        public static Serie GetSerie (int count = 1000) {
-
-            var values = new List<IList<object>> ();
-            for (int i = 0; i < count; i++) {
-                values.Add (GetObjs (i));
-            }
-
-            return new Serie () {
-                Columns = new string[] { "id", "name", "doubleVal", "time" },
-                    Values = values
-            };
-
-            IList<object> GetObjs (int i) {
-                return new List<object> (new object[] { i, "test", i + 1d, DateTime.Now });
             }
         }
 

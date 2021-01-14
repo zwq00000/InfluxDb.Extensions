@@ -21,6 +21,8 @@ namespace InfluxDb.Extensions {
 
         public static IEnumerable<TModel> As<TModel> (this Serie serie) where TModel : new () {
             var setters = PropertiesCache<TModel>.GetSetters ();
+            var matched = serie.Columns.Select (c => setters.TryGetValue (c, out var s) ? s : null).ToArray ();
+
             foreach (var value in serie.Values) {
                 var instance = new TModel ();
                 foreach (var tag in serie.Tags) {
@@ -31,7 +33,8 @@ namespace InfluxDb.Extensions {
 
                 for (var i = 0; i < serie.Columns.Count; i++) {
                     var col = serie.Columns[i];
-                    if (setters.TryGetValue (col, out var setter)) {
+                    var setter = matched[i];
+                    if (setter != null) {
                         setter (instance, value[i]);
                     }
                 }
@@ -146,6 +149,10 @@ namespace InfluxDb.Extensions {
         #endregion
     }
 
+    /// <summary>
+    /// 类型属性和Setter 缓存
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     internal static class PropertiesCache<T> {
         private static PropertyInfo[] _cache;
 
@@ -179,13 +186,30 @@ namespace InfluxDb.Extensions {
         }
 
         private static Action<T, object> GetSetter (PropertyInfo property) {
+            if (property.PropertyType.IsEnum) {
+                return GetEnumSetter (property);
+            }
             var param_instance = Expression.Parameter (typeof (T));
             var param_value = Expression.Parameter (typeof (object));
-
-            var body_instance = Expression.Convert (param_instance, property.DeclaringType);
             var body_value = Expression.Convert (param_value, property.PropertyType);
-            var body_call = Expression.Call (body_instance, property.GetSetMethod (), body_value);
+            var body_call = Expression.Call (param_instance, property.GetSetMethod (), body_value);
+            return Expression.Lambda<Action<T, object>> (body_call, param_instance, param_value).Compile ();
+        }
 
+        private static MethodInfo enumParseMethod = typeof (Enum).GetMethod (nameof (Enum.Parse), new [] { typeof (string) });
+        /// <summary>
+        /// 生成枚举类型赋值Action
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
+        private static Action<T, object> GetEnumSetter (PropertyInfo property) {
+            var param_instance = Expression.Parameter (typeof (T));
+            var param_value = Expression.Parameter (typeof (object));
+            var body_instance = Expression.Convert (param_instance, property.DeclaringType);
+            var param_Converter = Expression.Convert (param_value, typeof (string));
+            var parseMethod = enumParseMethod.MakeGenericMethod (property.PropertyType);
+            var exp_right = Expression.Call (null, parseMethod, param_Converter);
+            var body_call = Expression.Call (body_instance, property.GetSetMethod (), exp_right);
             return Expression.Lambda<Action<T, object>> (body_call, param_instance, param_value).Compile ();
         }
 
