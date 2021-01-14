@@ -2,9 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 jobs:
   build:
@@ -32,3 +32,4 @@ jobs:
     - name: push nuget
       run:
         dotnet nuget push *.nupkg -k ${{secrets.nuget_apikey}} -s https://api.nuget.org/v3/index.json
+
