@@ -16,6 +16,12 @@ namespace InfluxDb.Extensions {
         IInfluxDbClient Client { get; }
 
         /// <summary>
+        /// database name
+        /// </summary>
+        /// <value></value>
+        string Database { get; }
+
+        /// <summary>
         /// get <see cref="ISerieContext" /> by Measurement name
         /// </summary>
         /// <param name="measurement"></param>

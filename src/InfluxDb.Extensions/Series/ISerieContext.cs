@@ -1,14 +1,21 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using InfluxData.Net.InfluxDb;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
 
     /// <summary>
     /// Influx Measurement Serie Context
     /// </summary>
     public interface ISerieContext {
+
+        /// <summary>
+        /// 获取 <see cref="IInfluxDbClient"/>
+        /// </summary>
+        /// <value></value>
+        IInfluxDbClient Client { get; }
+
         ///<summary>
         /// Influx Database name
         ///</summary>

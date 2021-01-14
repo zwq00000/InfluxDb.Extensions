@@ -4,7 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
-namespace InfluxDb.Extensions {
+namespace InfluxDb.Extensions
+{
     /// <summary>
     /// Influx Serial Query 扩展方法
     /// </summary>
@@ -18,9 +19,9 @@ namespace InfluxDb.Extensions {
         public static SqlBuilder BuildQuery (this ISerieContext context, params string[] tags) {
             IEnumerable<string> fields;
             if (tags.Length > 0) {
-                fields = tags.Concat (context.Fields);
+                fields = tags;
             } else {
-                fields = new [] { "*" };
+                fields = context.Fields;;
             }
             return new SqlBuilder (fields, context.Measurement)
                 .TimeZone (context.TimeZone);
@@ -28,7 +29,7 @@ namespace InfluxDb.Extensions {
 
         public static SqlBuilder BuildMeanQuery (this ISerieContext context, TimeSpan interval) {
             return new SqlBuilder (context.Fields.Select (f => $"MEAN({f}) AS {f}"), context.Measurement)
-                .GroupBy (context.BuildTimeGroup (interval))
+                .GroupByTime (interval)
                 .TimeZone (context.TimeZone);
         }
 
@@ -48,13 +49,6 @@ namespace InfluxDb.Extensions {
                 .Where (whereClause)
                 .GroupBy (tags)
                 .TimeZone (context.TimeZone);
-        }
-
-        private static string BuildTimeGroup (this ISerieContext context, TimeSpan interval) {
-            if (interval.TotalSeconds <= 1) {
-                return "time(1s)";
-            }
-            return $"time({interval.TotalSeconds:F0}s)";
         }
 
         /// <summary>
@@ -79,14 +73,14 @@ namespace InfluxDb.Extensions {
         }
 
         /// <summary>
-        /// 计算数量
+        /// 根据分页参数获取 查询分页结果
         /// </summary>
         /// <param name="sqlBuilder"></param>
         /// <param name="context"></param>
         /// <param name="page"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<Serie>> ToPageSeriesAsync (this SqlBuilder sqlBuilder, ISerieContext context, int page = 1, int pageSize = 100) {
+        public static async Task<PageResult<Serie>> ToPageSeriesAsync (this SqlBuilder sqlBuilder, ISerieContext context, int page = 1, int pageSize = 100) {
             if (page < 1) {
                 page = 1;
             }
@@ -95,11 +89,12 @@ namespace InfluxDb.Extensions {
             }
             var count = await sqlBuilder.GetCountAsync (context);
             var sql = sqlBuilder.ToLimitAndOffset (pageSize, (page - 1) * pageSize);
-            return await context.QueryAsync (sql);
+            var values = await context.QueryAsync (sql);
+            return new PageResult<Serie> (new Paging (count, pageSize, page), values);
         }
 
         /// <summary>
-        /// 计算数量
+        /// 根据分页参数获取 查询分页结果
         /// </summary>
         /// <param name="sqlBuilder">SqlBuilder</param>
         /// <param name="context">SerieContext</param>
@@ -115,5 +110,6 @@ namespace InfluxDb.Extensions {
             var values = await context.QueryAsync (sql);
             return new PageResult<Serie> (paging, values);
         }
+
     }
 }

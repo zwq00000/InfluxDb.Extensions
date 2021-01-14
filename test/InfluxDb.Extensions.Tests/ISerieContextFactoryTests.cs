@@ -16,6 +16,8 @@ namespace InfluxDb.Extensions.Tests {
         public void TestResolve () {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
             Assert.NotNull (contextFactory);
+            Assert.NotNull(contextFactory.Client);
+            Assert.Equal("AIS",contextFactory.Database);
         }
 
         [Fact]
@@ -28,9 +30,9 @@ namespace InfluxDb.Extensions.Tests {
         [Fact]
         public async Task TestGetMeasurementsAsync () {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
-            var m = await contextFactory.GetMeasurementsAsync();
-            Assert.NotEmpty(m);
-            output .WriteLine(string.Join(",",m));
+            var m = await contextFactory.GetMeasurementsAsync ();
+            Assert.NotEmpty (m);
+            output.WriteLine (string.Join (",", m));
         }
 
         [Fact]
@@ -38,9 +40,10 @@ namespace InfluxDb.Extensions.Tests {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
             var context = await contextFactory.GetContextAsync ("Trace");
             Assert.NotNull (context);
-            await context.InitSerieAsync();
+            await context.InitSerieAsync ();
             var fileds = context.Fields;
-            Assert.NotEmpty(fileds);
+            Assert.NotEmpty (fileds);
         }
+
     }
 }

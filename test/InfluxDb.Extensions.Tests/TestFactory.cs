@@ -10,8 +10,8 @@ using Microsoft.Extensions.Logging;
 namespace InfluxDb.Extensions.Tests {
     public class TestFactory {
 
-        public const string Influx_Url = "http://192.168.1.22:8086";
-        public const string Influx_Database = "RMDP";
+        public const string Influx_Url = "http://192.168.1.25:8086";
+        public const string Influx_Database = "AIS";
         protected readonly TestServer TestServer;
 
         public IServiceScope Scope { get; private set; }
