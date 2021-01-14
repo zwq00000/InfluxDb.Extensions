@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb;
+using InfluxData.Net.InfluxDb.ClientModules;
 using InfluxData.Net.InfluxDb.Models.Responses;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +11,7 @@ namespace InfluxDb.Extensions {
     /// <summary>
     /// Serie query Context
     /// </summary>
-    public class SerieContext : ISerieContext {
+    internal class SerieContext : ISerieContext {
         private IInfluxDbClient _client;
         private readonly ILogger _logger;
 
@@ -22,18 +23,16 @@ namespace InfluxDb.Extensions {
             this._logger = logger;
         }
 
-        public SerieContext(IInfluxDbClient client, string database, string measurement, string timeZone, IEnumerable<string> fields, IEnumerable<string> tags, ILogger logger)
-        {
+        internal SerieContext (IInfluxDbClient client, MeasurementInfo info, ILogger logger) {
             _client = client;
             _logger = logger;
-            Database = database;
-            Measurement = measurement;
-            TimeZone = timeZone;
-            Fields = fields;
-            Tags = tags;
-            FirstField = fields.FirstOrDefault();
+            Database = info.Database;
+            Measurement = info.Measurement;
+            TimeZone = info.TimeZone;
+            Fields = info.Fields;
+            Tags = info.Tags;
+            FirstField = Fields.FirstOrDefault ();
         }
-
 
         /// <summary>
         /// Influx Database name
@@ -67,6 +66,12 @@ namespace InfluxDb.Extensions {
         public string FirstField { get; private set; }
 
         /// <summary>
+        /// 获取 <see cref="IInfluxDbClient"/>
+        /// </summary>
+        /// <value></value>
+        public IInfluxDbClient Client { get => _client; }
+
+        /// <summary>
         /// initialize SerieContext ,fill Fields and Tags
         /// </summary>
         /// <returns></returns>
@@ -76,12 +81,6 @@ namespace InfluxDb.Extensions {
             FirstField = Fields.First ();
         }
 
-        public void EnsureInit () {
-            if (Fields == null || !Fields.Any ()) {
-                InitSerieAsync ().Wait ();
-            }
-        }
-
         /// <summary>
         /// 验证数据库是否存在
         /// </summary>
@@ -89,16 +88,6 @@ namespace InfluxDb.Extensions {
         private async Task<bool> ValidateDatabase () {
             var databases = await _client.Database.GetDatabasesAsync ();
             return databases.Any (d => d.Name == Database);
-        }
-
-        /// <summary>
-        /// 确认数据库是否被创建
-        /// </summary>
-        /// <returns></returns>
-        public async Task EnsureCreated () {
-            if (!await ValidateDatabase ()) {
-                await _client.Database.CreateDatabaseAsync (Database);
-            }
         }
 
         /// <summary>
@@ -114,14 +103,27 @@ namespace InfluxDb.Extensions {
             return keys.Select (k => k.Name).ToArray ();
         }
 
+        /// <summary>
+        /// 执行sql 语句,返回查询结果
+        /// </summary>
+        /// <param name="sql"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<Serie>> QueryAsync (string sql) {
             _logger.LogTrace ("influx database '{database}' exec\n {sql}", Database, sql);
             return await _client.Client.QueryAsync (sql, Database);
         }
 
+        /// <summary>
+        /// 执行sql 语句,返回查询结果
+        /// </summary>
+        /// <param name="sqlBuilder"></param>
+        /// <returns></returns>
         public async Task<IEnumerable<Serie>> QueryAsync (SqlBuilder sqlBuilder) {
             return await _client.Client.QueryAsync (sqlBuilder.ToString (), Database);
         }
 
+        internal MeasurementInfo ToMeasurementInfo () {
+            return new MeasurementInfo (Database, Measurement, TimeZone, Fields, Tags);
+        }
     }
 }

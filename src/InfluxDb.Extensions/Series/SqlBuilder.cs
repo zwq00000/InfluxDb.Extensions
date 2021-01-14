@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using InfluxData.Net.InfluxDb.Enums;
 
 namespace InfluxDb.Extensions {
     /// <summary>
@@ -76,7 +77,7 @@ namespace InfluxDb.Extensions {
         ///     string op 'string'
         /// </summary>
         /// <param name="column"></param>
-        /// <param name="op"></param>
+        /// <param name="op">is,&gt;,&lt;,=,&gt;=,&lt;=</param>
         /// <param name="value"></param>
         /// <returns></returns>
         public SqlBuilder Where (string column, string op, object value) {
@@ -112,6 +113,52 @@ namespace InfluxDb.Extensions {
             }
             _whereClause.Add (whereClause);
             return this;
+        }
+
+        /// <summary>
+        /// 增加时间开始条件 time &gt;= start
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <returns></returns>
+        public SqlBuilder Start (DateTime start) {
+            return Where ($"time >= '{start.ToRfc3339()}'");
+        }
+
+        /// <summary>
+        /// 增加时间开始点 now()-duration
+        /// add time where "time &gt;= now()-duration"
+        /// </summary>
+        /// <param name="duration">时间范围</param>
+        /// <returns></returns>
+        public SqlBuilder Start (TimeSpan duration) {
+            return Where ($"time >= now()-{duration.ToDuration()}");
+        }
+
+        /// <summary>
+        /// 增加日期开始条件
+        /// </summary>
+        /// <param name="startDate">开始日期</param>
+        /// <returns></returns>
+        public SqlBuilder StartDate (DateTime startDate) {
+            return Where ($"time >= '{startDate.Date.ToRfc3339()}'");
+        }
+
+        /// <summary>
+        /// add end time condition where "time &lt;= endtime (rfc3339)"
+        /// </summary>
+        /// <param name="endtime">结束时间</param>
+        /// <returns></returns>
+        public SqlBuilder EndWith (DateTime endtime) {
+            return Where ($"time <= '{endtime.ToRfc3339()}'");
+        }
+
+        /// <summary>
+        /// add time where "time &lt;= now()-duration"
+        /// </summary>
+        /// <param name="duration">时间范围</param>
+        /// <returns></returns>
+        public SqlBuilder EndWith (TimeSpan duration) {
+            return Where ($"time <= now()-{duration.ToDuration()}");
         }
 
         public SqlBuilder OrderBy (params string[] fields) {
@@ -156,11 +203,11 @@ namespace InfluxDb.Extensions {
         /// 计算结果时，所有返回的数据都必须在查询的显式时间范围内出现，但GROUP BY间隔将基于预设的时间范围。
         /// </remarks>
         /// <returns></returns>
-        public SqlBuilder GroupByTime (int time, string timeunit) {
+        public SqlBuilder GroupByTime (int duration, string durationUnit) {
             if (_groups == null) {
                 _groups = new List<string> ();
             }
-            this._groups.Add ($"time({time}{timeunit})");
+            this._groups.Add ($"time({duration}{durationUnit})");
             return this;
         }
 
@@ -173,7 +220,7 @@ namespace InfluxDb.Extensions {
             if (_groups == null) {
                 _groups = new List<string> ();
             }
-            this._groups.Add ($"time({duration.ToTimeInterval()})");
+            this._groups.Add ($"time({duration.ToDuration()})");
             return this;
         }
 
@@ -190,6 +237,13 @@ namespace InfluxDb.Extensions {
             }
             return this;
         }
+
+        public SqlBuilder Fill (FillType value) {
+            this._fillValue = value.ToString();
+            return this;
+        }
+
+        
 
         /// <summary>
         /// Fill with a specified value
@@ -223,6 +277,7 @@ namespace InfluxDb.Extensions {
 
         /// <summary>
         /// 生成 Count Sql
+        /// "Count({field}) AS COUNT"
         /// </summary>
         /// <returns></returns>
         public string ToCount () {
@@ -230,6 +285,12 @@ namespace InfluxDb.Extensions {
             return $"SELECT COUNT({field}) AS COUNT From {_table} {ToWhereClause()}";
         }
 
+        /// <summary>
+        /// 生成 limit/offset Sql 语句
+        /// </summary>
+        /// <param name="count">限制返回的数量</param>
+        /// <param name="offset">偏移量</param>
+        /// <returns></returns>
         public string ToLimitAndOffset (int count, int offset) {
             var builder = BuildSql ();
             builder.Append ($"  LIMIT {count} OFFSET {offset}").Append (ToTimeZoneClause ());

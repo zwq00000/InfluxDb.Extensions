@@ -1,14 +1,21 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using InfluxData.Net.InfluxDb;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
 
     /// <summary>
     /// Influx Measurement Serie Context
     /// </summary>
     public interface ISerieContext {
+
+        /// <summary>
+        /// 获取 <see cref="IInfluxDbClient"/>
+        /// </summary>
+        /// <value></value>
+        IInfluxDbClient Client { get; }
+
         ///<summary>
         /// Influx Database name
         ///</summary>
@@ -41,17 +48,6 @@ namespace InfluxDb.Extensions
         string FirstField { get; }
 
         /// <summary>
-        /// ensure influxdb database and measurement created
-        /// </summary>
-        /// <returns></returns>
-        Task EnsureCreated ();
-
-        /// <summary>
-        /// ensure <c cref="SerieContext" /> initialized
-        /// </summary>
-        void EnsureInit ();
-
-        /// <summary>
         /// initialize SerieContext ,fill Fields and Tags
         /// </summary>
         /// <returns></returns>
@@ -70,19 +66,5 @@ namespace InfluxDb.Extensions
         /// <param name="sqlBuilder"></param>
         /// <returns></returns>
         Task<IEnumerable<Serie>> QueryAsync (SqlBuilder sqlBuilder);
-    }
-
-    /// <summary>
-    /// Seire Context Factory
-    /// </summary>
-    public interface ISerieContextFactory {
-
-        /// <summary>
-        /// get <see cref="ISerieContext" /> by Measurement name
-        /// </summary>
-        /// <param name="measurement"></param>
-        /// <returns></returns>
-        ISerieContext GetContext (string measurement);
-
     }
 }
