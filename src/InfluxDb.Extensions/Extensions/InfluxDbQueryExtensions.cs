@@ -9,70 +9,7 @@ namespace InfluxDb.Extensions {
     /// Infflux DB 数据查询扩展方法
     /// </summary>
     internal static class InfluxDbQueryExtensions {
-        /// <summary>
-        /// 生成指定日期 当日范围的 Where 子句, [date.Date,date.Date.AddDays(1)]
-        /// </summary>
-        /// <param name="date"></param>
-        /// <param name="wholeDay">一整天,从当日0点开始</param>
-        /// <returns></returns>
-        public static string ToDateWhereClause (this DateTime date, bool wholeDay = true) {
-            if (wholeDay) {
-                return date.Date.ToWhereClause (date.Date.AddDays (1));
-            } else {
-                return date.ToWhereClause (date.Date.AddDays (1));
-            }
-        }
-
-        /// <summary>
-        /// 生成指定开始时间的 时间条件子句
-        /// </summary>
-        /// <param name="start"></param>
-        /// <returns></returns>
-        public static string ToStartTimeWhereClause (this DateTime start) {
-            return $"time >= '{start.ToRfc3339()}'";
-        }
-
-        /// <summary>
-        /// 生成指定时间和范围的 Where 子句, [date,date+offset)
-        /// </summary>
-        /// <param name="date"></param>
-        /// <param name="offset"></param>
-        /// <returns></returns>
-        public static string ToWhereClause (this DateTime date, TimeSpan offset) {
-            return date.ToWhereClause (date + offset);
-        }
-
-        /// <summary>
-        /// 生成日期范围 Where 子句
-        /// </summary>
-        /// <param name="start"></param>
-        /// <param name="end"></param>
-        /// <returns></returns>
-        public static string ToWhereClause (this DateTime start, DateTime? end = null) {
-
-            if (!end.HasValue) {
-                var time = DateTime.Now - start;
-                return $"time >= '{start.ToRfc3339()}'";
-            }
-            var endtime = end.Value;
-            if (start > end) {
-                var _ = start;
-                start = endtime;
-                end = _;
-            }
-            return $"time >= '{start.ToRfc3339()}' AND time < '{endtime.ToRfc3339()}'";
-        }
-
-        /// <summary>
-        /// 生成 最近时间范围 Where 子句
-        /// 'time >= now() - ns'
-        /// </summary>
-        /// <param name="time"></param>
-        /// <returns></returns>
-        public static string ToLastWhereClause (this TimeSpan time) {
-            return $"time >= now() - {time.TotalSeconds}s";
-        }
-
+       
         /// <summary>
         /// 持续时间字面量指定时间长度。紧跟着（无空格）后跟下面列出的持续时间单位的整数文字将被解释为持续时间文字。
         /// 持续时间可以混合单位指定。

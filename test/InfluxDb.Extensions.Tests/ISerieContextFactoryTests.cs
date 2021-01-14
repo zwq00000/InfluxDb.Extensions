@@ -2,8 +2,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests
-{
+namespace InfluxDb.Extensions.Tests {
     public class ISerieContextFactoryTests {
         private readonly TestFactory factory;
         private readonly ITestOutputHelper output;
@@ -17,6 +16,8 @@ namespace InfluxDb.Extensions.Tests
         public void TestResolve () {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
             Assert.NotNull (contextFactory);
+            Assert.NotNull(contextFactory.Client);
+            Assert.Equal("AIS",contextFactory.Database);
         }
 
         [Fact]
@@ -43,5 +44,6 @@ namespace InfluxDb.Extensions.Tests
             var fileds = context.Fields;
             Assert.NotEmpty (fileds);
         }
+
     }
 }

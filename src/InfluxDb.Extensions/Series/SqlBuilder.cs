@@ -77,7 +77,7 @@ namespace InfluxDb.Extensions {
         ///     string op 'string'
         /// </summary>
         /// <param name="column"></param>
-        /// <param name="op"></param>
+        /// <param name="op">is,&gt;,&lt;,=,&gt;=,&lt;=</param>
         /// <param name="value"></param>
         /// <returns></returns>
         public SqlBuilder Where (string column, string op, object value) {

@@ -23,6 +23,10 @@ namespace InfluxDb.Extensions {
             this._client = _options.Value.CreateNewClient ();
         }
 
+        /// <summary>
+        /// Serie Context used database name
+        /// </summary>
+        /// <value></value>
         public string Database { get => _options.Value.Database; }
 
         public IInfluxDbClient Client => _client;
