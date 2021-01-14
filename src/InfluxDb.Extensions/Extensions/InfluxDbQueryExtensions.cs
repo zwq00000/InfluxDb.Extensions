@@ -9,7 +9,7 @@ namespace InfluxDb.Extensions {
     /// Infflux DB 数据查询扩展方法
     /// </summary>
     internal static class InfluxDbQueryExtensions {
-       
+
         /// <summary>
         /// 持续时间字面量指定时间长度。紧跟着（无空格）后跟下面列出的持续时间单位的整数文字将被解释为持续时间文字。
         /// 持续时间可以混合单位指定。
@@ -22,8 +22,13 @@ namespace InfluxDb.Extensions {
         /// <returns></returns>
         public static string ToDuration (this TimeSpan time) {
             var builder = new StringBuilder ();
+
             if (time.Days > 0) {
-                builder.Append ($"{time.Days}d");
+                if (time.Days % 7 == 0) {
+                    builder.Append ($"{time.Days/7}w");
+                } else {
+                    builder.Append ($"{time.Days}d");
+                }
             }
             if (time.Hours > 0) {
                 builder.Append ($"{time.Hours}h");
@@ -36,9 +41,6 @@ namespace InfluxDb.Extensions {
                 builder.Append ($"{time.Seconds}s");
             }
             if (time.Milliseconds > 0) {
-                builder.Append ($"{time.Milliseconds}ms");
-            }
-            if (time.Ticks > 0) {
                 builder.Append ($"{time.Milliseconds}ms");
             }
             return builder.ToString ();
