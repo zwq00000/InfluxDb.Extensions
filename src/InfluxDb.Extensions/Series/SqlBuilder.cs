@@ -115,10 +115,30 @@ namespace InfluxDb.Extensions {
             return this;
         }
 
+        /// <summary>
+        /// 增加时间开始条件 time &gt;= start
+        /// </summary>
+        /// <param name="start">开始时间</param>
+        /// <returns></returns>
         public SqlBuilder Start (DateTime start) {
             return Where ($"time >= '{start.ToRfc3339()}'");
         }
 
+        /// <summary>
+        /// 增加时间开始点 now()-duration
+        /// add time where "time &gt;= now()-duration"
+        /// </summary>
+        /// <param name="duration">时间范围</param>
+        /// <returns></returns>
+        public SqlBuilder Start (TimeSpan duration) {
+            return Where ($"time >= now()-{duration.ToDuration()}");
+        }
+
+        /// <summary>
+        /// 增加日期开始条件
+        /// </summary>
+        /// <param name="startDate">开始日期</param>
+        /// <returns></returns>
         public SqlBuilder StartDate (DateTime startDate) {
             return Where ($"time >= '{startDate.Date.ToRfc3339()}'");
         }
@@ -126,7 +146,7 @@ namespace InfluxDb.Extensions {
         /// <summary>
         /// add end time condition where "time &lt;= endtime (rfc3339)"
         /// </summary>
-        /// <param name="endtime"></param>
+        /// <param name="endtime">结束时间</param>
         /// <returns></returns>
         public SqlBuilder EndWith (DateTime endtime) {
             return Where ($"time <= '{endtime.ToRfc3339()}'");
@@ -135,10 +155,10 @@ namespace InfluxDb.Extensions {
         /// <summary>
         /// add time where "time &lt;= now()-duration"
         /// </summary>
-        /// <param name="time"></param>
+        /// <param name="duration">时间范围</param>
         /// <returns></returns>
-        public SqlBuilder EndWith (TimeSpan time) {
-            return Where ($"time < now()-{time.ToDuration()}");
+        public SqlBuilder EndWith (TimeSpan duration) {
+            return Where ($"time <= now()-{duration.ToDuration()}");
         }
 
         public SqlBuilder OrderBy (params string[] fields) {
