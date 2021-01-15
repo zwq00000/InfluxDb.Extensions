@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using InfluxData.Net.Common.Infrastructure;
 using InfluxData.Net.InfluxDb;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
@@ -66,5 +67,7 @@ namespace InfluxDb.Extensions {
         /// <param name="sqlBuilder"></param>
         /// <returns></returns>
         Task<IEnumerable<Serie>> QueryAsync (SqlBuilder sqlBuilder);
+
+        Task<IInfluxDataApiResponse> GetQueryAsync(SqlBuilder sqlBuilder);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -35,7 +36,12 @@ namespace InfluxDb.Extensions {
                     var col = serie.Columns[i];
                     var setter = matched[i];
                     if (setter != null) {
+                        try{
                         setter (instance, value[i]);
+                        }catch(Exception e){
+                            Debug.WriteLine("set property {0} {1} fail,{3}",col,value[i],e);
+                            throw ;
+                        }
                     }
                 }
                 yield return instance;
@@ -182,17 +188,78 @@ namespace InfluxDb.Extensions {
 
         private static IEnumerable<PropertyInfo> GetProperties (Type type) {
             return type.GetRuntimeProperties ()
-                .Where (p => p.CanRead && CanConverted (p.PropertyType));
+                .Where (p => p.CanWrite && p.SetMethod != null && CanConverted (p.PropertyType));
+        }
+        private static MethodInfo GetConvertMethod (TypeCode typeCode) {
+            switch (typeCode) {
+                case TypeCode.Boolean:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToBoolean), new Type[] { typeof (object) });
+
+                case TypeCode.Char:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToChar), new Type[] { typeof (object) });
+
+                case TypeCode.SByte:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToSByte), new Type[] { typeof (object) });
+
+                case TypeCode.Byte:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToByte), new Type[] { typeof (object) });
+
+                case TypeCode.Int16:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToInt16), new Type[] { typeof (object) });
+
+                case TypeCode.UInt16:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToUInt16), new Type[] { typeof (object) });
+
+                case TypeCode.Int32:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToInt32), new Type[] { typeof (object) });
+
+                case TypeCode.UInt32:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToUInt32), new Type[] { typeof (object) });
+
+                case TypeCode.Int64:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToInt64), new Type[] { typeof (object) });
+
+                case TypeCode.UInt64:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToUInt64), new Type[] { typeof (object) });
+
+                case TypeCode.Single:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToSingle), new Type[] { typeof (object) });
+
+                case TypeCode.Double:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToDouble), new Type[] { typeof (object) });
+
+                case TypeCode.Decimal:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToDecimal), new Type[] { typeof (object) });
+
+                case TypeCode.DateTime:
+                    return typeof (Convert).GetMethod (nameof (Convert.ToDateTime), new Type[] { typeof (object) });
+                default:
+                    return null;
+            }
         }
 
         private static Action<T, object> GetSetter (PropertyInfo property) {
             if (property.PropertyType.IsEnum) {
                 return GetEnumSetter (property);
             }
+            var setMethod = property.GetSetMethod ();
+            if (setMethod == null) {
+                Debug.WriteLine ("Not found setMethod for property " + property.Name);
+                return null;
+            }
             var param_instance = Expression.Parameter (typeof (T));
             var param_value = Expression.Parameter (typeof (object));
-            var body_value = Expression.Convert (param_value, property.PropertyType);
-            var body_call = Expression.Call (param_instance, property.GetSetMethod (), body_value);
+            Expression body_value;
+            var typeCode = Type.GetTypeCode (property.PropertyType);
+            var convertMethod = GetConvertMethod (typeCode);
+            if (convertMethod != null) {
+                body_value = Expression.Call (null, GetConvertMethod (typeCode), param_value);
+            } else {
+                body_value = Expression.Convert (param_value, property.PropertyType);
+            }
+
+            // var body_value = Expression.ConvertChecked(param_value, property.PropertyType);
+            var body_call = Expression.Call (param_instance, setMethod, body_value);
             return Expression.Lambda<Action<T, object>> (body_call, param_instance, param_value).Compile ();
         }
 
@@ -203,6 +270,11 @@ namespace InfluxDb.Extensions {
         /// <param name="property"></param>
         /// <returns></returns>
         private static Action<T, object> GetEnumSetter (PropertyInfo property) {
+            var setMethod = property.GetSetMethod ();
+            if (setMethod == null) {
+                Debug.WriteLine ("Not found setMethod for property " + property.Name);
+                return null;
+            }
             var param_instance = Expression.Parameter (typeof (T));
             var param_value = Expression.Parameter (typeof (object));
             var body_instance = Expression.Convert (param_instance, property.DeclaringType);
@@ -219,7 +291,8 @@ namespace InfluxDb.Extensions {
         /// <param name="propertyType"></param>
         /// <returns></returns>
         private static bool CanConverted (Type propertyType) {
-            return propertyType.IsValueType ||
+            return propertyType.IsPrimitive ||
+                propertyType.IsValueType ||
                 propertyType == typeof (string) ||
                 propertyType.IsEnum ||
                 propertyType == typeof (byte[]);

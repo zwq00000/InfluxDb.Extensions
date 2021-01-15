@@ -1,12 +1,55 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
 namespace InfluxDb.Extensions.Tests {
     internal static class InfluxJsonUtf8Extensions {
+
+        public static void ReadFromJson (string json) {
+            var bytes = Encoding.UTF8.GetBytes (json);
+            var reader = new Utf8JsonReader (bytes, false, new JsonReaderState ());
+            while (reader.Read ()) {
+
+                Debug.WriteLine ("->"+ reader.TokenType);
+
+                switch (reader.TokenType) {
+                    case JsonTokenType.PropertyName:
+                        Console.WriteLine (reader.GetString ());
+                        break;
+                    case JsonTokenType.StartArray:
+                        ReadColumns (reader);
+                        break;
+                }
+            }
+        }
+
+        private static void ReadColumns (this Utf8JsonReader reader) {
+            if (reader.TokenType == JsonTokenType.StartArray) {
+                while (reader.Read ()) {
+                    if (reader.TokenType == JsonTokenType.EndArray) {
+                        break;
+                    }
+                    switch (reader.TokenType) {
+                        case JsonTokenType.String:
+                            Debug.Write (reader.GetString ());
+                            break;
+                    }
+                }
+            }
+        }
+
+        public static void WriteToJsonUtf8 (this IEnumerable<Serie> series, Utf8JsonWriter writer, Func<string, string> naming = null) {
+            writer.WriteStartArray ();
+            foreach (var serie in series) {
+                serie.WriteToJsonUtf8Internal (writer, naming);
+            }
+            writer.WriteEndArray ();
+        }
 
         /// <summary>
         /// 使用 <see cref="Utf8JsonWriter" /> 写入 Serie Json
@@ -15,17 +58,23 @@ namespace InfluxDb.Extensions.Tests {
         /// <param name="writer"></param>
         /// <param name="naming"></param>
         public static void WriteToJsonUtf8 (this Serie serie, Utf8JsonWriter writer, Func<string, string> naming = null) {
-            // var names = serie.Columns.Select (n => naming (n)).ToArray ();
-            string[] names;
-            if (naming == null) {
-                names = serie.Columns.ToArray ();
-            } else {
-                names = serie.Columns.Select (n => naming (n)).ToArray ();
-            }
-
             writer.WriteStartArray ();
-            var cache = new SerieWriteHelper (serie);
+            serie.WriteToJsonUtf8Internal (writer, naming);
+            writer.WriteEndArray ();
+        }
 
+        private static string[] GetColumnsNames (this Serie serie, Func<string, string> naming = null) {
+            if (naming == null) {
+                return serie.Columns.ToArray ();
+            } else {
+                return serie.Columns.Select (n => naming (n)).ToArray ();
+            }
+        }
+
+        private static void WriteToJsonUtf8Internal (this Serie serie, Utf8JsonWriter writer, Func<string, string> naming = null) {
+            string[] names = serie.GetColumnsNames (naming);
+
+            var cache = new SerieWriteHelper (serie);
             foreach (var value in serie.Values) {
                 writer.WriteStartObject ();
 
@@ -38,7 +87,6 @@ namespace InfluxDb.Extensions.Tests {
 
                 writer.WriteEndObject ();
             }
-            writer.WriteEndArray ();
         }
 
         private class SerieWriteHelper {

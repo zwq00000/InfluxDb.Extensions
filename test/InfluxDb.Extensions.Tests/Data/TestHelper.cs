@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using InfluxData.Net.InfluxDb.Models.Responses;
+using Newtonsoft.Json;
 
 namespace InfluxDb.Extensions.Tests {
     internal static class TestHelper {
@@ -8,19 +9,49 @@ namespace InfluxDb.Extensions.Tests {
 
             var values = new List<IList<object>> ();
             for (int i = 0; i < count; i++) {
-                values.Add (GetObjs (i));
+                var model = new TestModel () {
+                    Id = i,
+                    Name = "TEST",
+                    FloatValue = i + 0.1f,
+                    DoubleValue = i + 0.2d,
+                    LongValue = i * 2,
+                    IntValue = i * 3,
+                    Time = DateTime.Now,
+                };
+                values.Add (GetInstance (model));
             }
             var tags = new Dictionary<string, string> ();
             tags.Add (nameof (TestModel.Type), MockType.Type1.ToString ());
 
             return new Serie () {
-                Columns = new string[] { "id", "name", "doubleVal", "time" },
-                    Tags = tags,
-                    Values = values
+                Columns = new string[] {
+                        "time",
+                        "Id",
+                        "Name",
+                        "Time",
+                        "FloatValue",
+                        "DoubleValue",
+                        "LongValue",
+                        "IntValue",
+                        "ShortValue",
+                        },
+                        Tags = tags,
+                        Values = values
             };
 
-            IList<object> GetObjs (int i) {
-                return new List<object> (new object[] { i, "test", i + 1d, DateTime.Now });
+            IList<object> GetInstance (TestModel model) {
+                var values = new object[] {
+                    model.Id,
+                    model.Name,
+                    model.Time,
+                    model.FloatValue,
+                    model.DoubleValue,
+                    model.LongValue,
+                    model.IntValue,
+                    model.ShortValue
+                };
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject (values);
+                return JsonConvert.DeserializeObject<object[]> (json);
             }
         }
 

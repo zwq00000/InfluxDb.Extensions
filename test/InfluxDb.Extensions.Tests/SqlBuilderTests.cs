@@ -1,8 +1,7 @@
 using Xunit;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests
-{
+namespace InfluxDb.Extensions.Tests {
     public class SqlBuilderTests {
         private readonly ITestOutputHelper output;
 

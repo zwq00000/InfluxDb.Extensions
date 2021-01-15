@@ -1,6 +1,9 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,7 +21,7 @@ namespace InfluxDb.Extensions.Tests {
         public void TestPropertySetter () {
             var properties = PropertiesCache<TestModel>.GetProperties ();
             Assert.NotEmpty (properties);
-            Assert.Equal (4, properties.Count ());
+            Assert.Equal (9, properties.Count ());
 
             var setters = PropertiesCache<TestModel>.GetSetters ();
 
@@ -28,6 +31,7 @@ namespace InfluxDb.Extensions.Tests {
             setters["Id"] (item, 1);
             setters["Name"] (item, "TEST");
             setters["Time"] (item, time);
+            setters[nameof (TestModel.FloatValue)] (item, (object) 1.2d);
             setters["Type"] (item, MockType.Type1.ToString ());
 
             Assert.Equal (1, item.Id);
@@ -65,9 +69,42 @@ namespace InfluxDb.Extensions.Tests {
             Assert.NotEmpty (entities);
             Assert.Equal (TestCount, entities.Count ());
             foreach (var item in entities) {
-                Assert.Equal(MockType.Type1,item.Type);
-                Assert.Equal("test",item.Name);
+                Assert.Equal (MockType.Type1, item.Type);
+                Assert.Equal ("test", item.Name);
             }
+        }
+
+        [Fact]
+        public async Task TestShipTrackAsAsync () {
+            var factory = new TestFactory ();
+            var contextFactory = factory.GetService<ISerieContextFactory> ();
+            var context = await contextFactory.GetContextAsync ("ShipTrack");
+            var sql = context.BuildQuery ().Start (TimeSpan.FromMinutes (5))
+                .GroupBy ("NavStatus");
+            var series = await context.QueryAsync (sql);
+            Assert.NotEmpty (series);
+            var entities = series.As<ShipTrack> ().ToArray ();
+            Assert.NotEmpty (entities);
+        }
+
+        [Fact]
+        public async Task TestShipTrackToJsonUtf8Async () {
+            var factory = new TestFactory ();
+            var contextFactory = factory.GetService<ISerieContextFactory> ();
+            var context = await contextFactory.GetContextAsync ("ShipTrack");
+            var sql = context.BuildQuery ().Start (TimeSpan.FromMinutes (5))
+                .GroupBy ("NavStatus");
+            var series = await context.QueryAsync (sql.ToLimitAndOffset (10, 0));
+            Assert.NotEmpty(series);
+
+            var writer = new PooledByteBufferWriter (1024 * 64);
+            series.WriteToJsonUtf8 (new System.Text.Json.Utf8JsonWriter (writer), null);
+            
+            var stream = new MemoryStream();
+            await writer.WriteToStreamAsync(stream,CancellationToken.None);
+            stream.Position = 0;
+            output.WriteLine(new StreamReader(stream).ReadToEnd());
+
         }
     }
 }
