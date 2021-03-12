@@ -12,8 +12,7 @@ using Newtonsoft.Json.Serialization;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests
-{
+namespace InfluxDb.Extensions.Tests {
     public class SerieContextExtensionsTests {
         private readonly TestFactory factory;
         private readonly ITestOutputHelper output;

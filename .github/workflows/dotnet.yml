@@ -28,7 +28,7 @@ jobs:
       run: |
         subversion=`date +%Y%m%d`
         echo $subversion
-        dotnet pack src/InfluxDb.Extensions -o . -c Release -p:PackageVersion=1.0.2
+        dotnet pack src/InfluxDb.Extensions -o . -c Release -p:PackageVersion=1.0.3
     - name: push nuget
       run:
         dotnet nuget push *.nupkg -k ${{secrets.nuget_apikey}} -s https://api.nuget.org/v3/index.json

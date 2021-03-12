@@ -1,8 +1,7 @@
 using System;
 using Xunit.Abstractions;
 
-namespace InfluxDb.Extensions.Tests
-{
+namespace InfluxDb.Extensions.Tests {
     public class TaskPerformance : IDisposable {
         private readonly ITestOutputHelper output;
         private readonly string taskName;

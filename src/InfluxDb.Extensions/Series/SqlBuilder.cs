@@ -131,6 +131,9 @@ namespace InfluxDb.Extensions {
         /// <param name="duration">时间范围</param>
         /// <returns></returns>
         public SqlBuilder Start (TimeSpan duration) {
+            if(duration<TimeSpan.Zero){
+                duration = -duration;
+            }
             return Where ($"time >= now()-{duration.ToDuration()}");
         }
 

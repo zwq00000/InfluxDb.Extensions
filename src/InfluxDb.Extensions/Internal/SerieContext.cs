@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using InfluxData.Net.Common.Infrastructure;
 using InfluxData.Net.InfluxDb;
 using InfluxData.Net.InfluxDb.ClientModules;
 using InfluxData.Net.InfluxDb.Models.Responses;
@@ -120,6 +121,10 @@ namespace InfluxDb.Extensions {
         /// <returns></returns>
         public async Task<IEnumerable<Serie>> QueryAsync (SqlBuilder sqlBuilder) {
             return await _client.Client.QueryAsync (sqlBuilder.ToString (), Database);
+        }
+
+        public async Task<IInfluxDataApiResponse> GetQueryAsync(SqlBuilder sqlBuilder){
+            return await _client.RequestClient.GetQueryAsync(sqlBuilder.ToString(),Database);
         }
 
         internal MeasurementInfo ToMeasurementInfo () {

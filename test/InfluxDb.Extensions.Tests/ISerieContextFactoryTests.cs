@@ -16,8 +16,8 @@ namespace InfluxDb.Extensions.Tests {
         public void TestResolve () {
             var contextFactory = this.factory.GetService<ISerieContextFactory> ();
             Assert.NotNull (contextFactory);
-            Assert.NotNull(contextFactory.Client);
-            Assert.Equal("AIS",contextFactory.Database);
+            Assert.NotNull (contextFactory.Client);
+            Assert.Equal ("AIS", contextFactory.Database);
         }
 
         [Fact]

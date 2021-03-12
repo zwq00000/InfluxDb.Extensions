@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace InfluxDb.Extensions.Tests {
     public class TestFactory {
 
-        public const string Influx_Url = "http://192.168.1.25:8086";
+        public const string Influx_Url = "http://192.168.1.27:8086";
         public const string Influx_Database = "AIS";
         protected readonly TestServer TestServer;
 
@@ -23,9 +23,9 @@ namespace InfluxDb.Extensions.Tests {
             var builder = WebHost.CreateDefaultBuilder ()
                 .ConfigureServices (s => {
                     configServices?.Invoke (s);
-                    ConfigureServices(s);
-                }).Configure(a=>{
-                    
+                    ConfigureServices (s);
+                }).Configure (a => {
+
                 });
 
             TestServer = new TestServer (builder);
@@ -43,7 +43,7 @@ namespace InfluxDb.Extensions.Tests {
         }
 
         public void Configure (IApplicationBuilder app, IWebHostEnvironment env) {
-            
+
         }
 
         public TController GetController<TController> () where TController : ControllerBase {
@@ -62,7 +62,7 @@ namespace InfluxDb.Extensions.Tests {
         public IServiceProvider Services => Scope.ServiceProvider;
     }
 
-    public class StartUp{
+    public class StartUp {
 
     }
 }
