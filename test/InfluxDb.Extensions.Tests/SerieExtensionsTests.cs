@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+using InfluxData.Net.InfluxDb.Helpers;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -88,6 +89,19 @@ namespace InfluxDb.Extensions.Tests {
         }
 
         [Fact]
+        public async Task TestCountAsAsync () {
+            var factory = new TestFactory ();
+            var contextFactory = factory.GetService<ISerieContextFactory> ();
+            var context = await contextFactory.GetContextAsync ("ShipTrack");
+            var sql = context.BuildQuery ()
+                .Select ("Count(Lat) as Count")
+                .StartDate(DateTime.Today);
+
+            var series = await context.QueryAsync (sql);
+            series.As<SeriesCount> ().Sum (s => s.Count);
+        }
+
+        [Fact]
         public async Task TestShipTrackToJsonUtf8Async () {
             var factory = new TestFactory ();
             var contextFactory = factory.GetService<ISerieContextFactory> ();
@@ -95,16 +109,31 @@ namespace InfluxDb.Extensions.Tests {
             var sql = context.BuildQuery ().Start (TimeSpan.FromMinutes (5))
                 .GroupBy ("NavStatus");
             var series = await context.QueryAsync (sql.ToLimitAndOffset (10, 0));
-            Assert.NotEmpty(series);
+            Assert.NotEmpty (series);
 
             var writer = new PooledByteBufferWriter (1024 * 64);
             series.WriteToJsonUtf8 (new System.Text.Json.Utf8JsonWriter (writer), null);
-            
-            var stream = new MemoryStream();
-            await writer.WriteToStreamAsync(stream,CancellationToken.None);
+
+            var stream = new MemoryStream ();
+            await writer.WriteToStreamAsync (stream, CancellationToken.None);
             stream.Position = 0;
-            output.WriteLine(new StreamReader(stream).ReadToEnd());
+            output.WriteLine (new StreamReader (stream).ReadToEnd ());
 
         }
+    }
+
+    /// <summary>
+    /// 序列数量
+    /// </summary>
+    internal class SeriesCount {
+        /// <summary>
+        /// 时间
+        /// </summary>
+        public DateTime Time { get; set; }
+
+        /// <summary>
+        /// Count
+        /// </summary>
+        public int Count { get; set; }
     }
 }
