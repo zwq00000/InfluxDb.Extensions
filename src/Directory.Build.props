@@ -1,5 +1,12 @@
 <Project>
     <PropertyGroup>
+        <Version>1.0.4</Version>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <RepositoryUrl>https://github.com/zwq00000/InfluxDb.Extensions.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageProjectUrl>https://github.com/zwq00000/InfluxDb.Extensions</PackageProjectUrl>
+    </PropertyGroup>
+    <PropertyGroup>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>

@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>InfluxDb Extensions ,提供 InfluxdB 扩展方法 ,支持 InfluxDB v1</Description>
+    <PackageTags>InfluxDB</PackageTags>
   </PropertyGroup>
-
+    
  <ItemGroup>
     <PackageReference Include="InfluxData.Net" Version="8.0.*" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.*" />
