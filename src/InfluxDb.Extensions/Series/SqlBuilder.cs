@@ -50,20 +50,27 @@ namespace InfluxDb.Extensions {
         /// 时区
         /// </summary>
         private string _timeZone;
+        /// <summary>
+        /// limit 数量
+        /// </summary>
+        private int? _limitNum;
 
-        public SqlBuilder () { }
+        private int? _limit_offset;
 
-        public SqlBuilder (IEnumerable<string> fields, string from) : this () {
+
+        public SqlBuilder() { }
+
+        public SqlBuilder(IEnumerable<string> fields, string from) : this() {
             this._fields = fields;
             this._table = from;
         }
 
-        public SqlBuilder Select (params string[] fields) {
+        public SqlBuilder Select(params string[] fields) {
             this._fields = fields;
             return this;
         }
 
-        public SqlBuilder From (string from) {
+        public SqlBuilder From(string from) {
             _table = from;
             return this;
         }
@@ -80,11 +87,11 @@ namespace InfluxDb.Extensions {
         /// <param name="op">is,&gt;,&lt;,=,&gt;=,&lt;=</param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public SqlBuilder Where (string column, string op, object value) {
-            return Where (ToWhereClause (column, op, value));
+        public SqlBuilder Where(string column, string op, object value) {
+            return Where(ToWhereClause(column, op, value));
         }
 
-        private string ToWhereClause (string column, string op, object value) {
+        private string ToWhereClause(string column, string op, object value) {
             string valueStr;
             switch (value) {
                 case null:
@@ -101,17 +108,17 @@ namespace InfluxDb.Extensions {
                     valueStr = $"'{str}'";
                     break;
                 default:
-                    valueStr = value.ToString ();
+                    valueStr = value.ToString();
                     break;
             }
             return $"{column} {op} {valueStr}";
         }
 
-        public SqlBuilder Where (string whereClause) {
+        public SqlBuilder Where(string whereClause) {
             if (_whereClause == null) {
-                _whereClause = new List<string> ();
+                _whereClause = new List<string>();
             }
-            _whereClause.Add (whereClause);
+            _whereClause.Add(whereClause);
             return this;
         }
 
@@ -120,8 +127,8 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="start">开始时间</param>
         /// <returns></returns>
-        public SqlBuilder Start (DateTime start) {
-            return Where ($"time >= '{start.ToRfc3339()}'");
+        public SqlBuilder Start(DateTime start) {
+            return Where($"time >= '{start.ToRfc3339()}'");
         }
 
         /// <summary>
@@ -130,11 +137,11 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="duration">时间范围</param>
         /// <returns></returns>
-        public SqlBuilder Start (TimeSpan duration) {
-            if(duration<TimeSpan.Zero){
+        public SqlBuilder Start(TimeSpan duration) {
+            if (duration < TimeSpan.Zero) {
                 duration = -duration;
             }
-            return Where ($"time >= now()-{duration.ToDuration()}");
+            return Where($"time >= now()-{duration.ToDuration()}");
         }
 
         /// <summary>
@@ -142,8 +149,8 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="startDate">开始日期</param>
         /// <returns></returns>
-        public SqlBuilder StartDate (DateTime startDate) {
-            return Where ($"time >= '{startDate.Date.ToRfc3339()}'");
+        public SqlBuilder StartDate(DateTime startDate) {
+            return Where($"time >= '{startDate.Date.ToRfc3339()}'");
         }
 
         /// <summary>
@@ -151,8 +158,8 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="endtime">结束时间</param>
         /// <returns></returns>
-        public SqlBuilder EndWith (DateTime endtime) {
-            return Where ($"time <= '{endtime.ToRfc3339()}'");
+        public SqlBuilder EndWith(DateTime endtime) {
+            return Where($"time <= '{endtime.ToRfc3339()}'");
         }
 
         /// <summary>
@@ -160,38 +167,38 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="duration">时间范围</param>
         /// <returns></returns>
-        public SqlBuilder EndWith (TimeSpan duration) {
-            return Where ($"time <= now()-{duration.ToDuration()}");
+        public SqlBuilder EndWith(TimeSpan duration) {
+            return Where($"time <= now()-{duration.ToDuration()}");
         }
 
-        public SqlBuilder OrderBy (params string[] fields) {
+        public SqlBuilder OrderBy(params string[] fields) {
             if (_orderbyClause == null) {
-                _orderbyClause = new List<string> (fields.Where (f => !string.IsNullOrEmpty (f)));
+                _orderbyClause = new List<string>(fields.Where(f => !string.IsNullOrEmpty(f)));
             } else {
                 foreach (var key in fields) {
-                    _orderbyClause.Add (key);
+                    _orderbyClause.Add(key);
                 }
             }
             return this;
         }
 
-        public SqlBuilder OrderByDesc (params string[] fields) {
+        public SqlBuilder OrderByDesc(params string[] fields) {
             if (_orderbyDescClause == null) {
-                _orderbyDescClause = new List<string> (fields.Where (f => !string.IsNullOrEmpty (f)));
+                _orderbyDescClause = new List<string>(fields.Where(f => !string.IsNullOrEmpty(f)));
             } else {
                 foreach (var key in fields) {
-                    _orderbyDescClause.Add (key);
+                    _orderbyDescClause.Add(key);
                 }
             }
             return this;
         }
 
-        public SqlBuilder GroupBy (params string[] fields) {
+        public SqlBuilder GroupBy(params string[] fields) {
             if (_groups == null) {
-                _groups = new List<string> (fields.Where (f => !string.IsNullOrWhiteSpace (f)));
-            } else if (fields.Any ()) {
-                foreach (var field in fields.Where (f => !string.IsNullOrWhiteSpace (f))) {
-                    _groups.Add (field);
+                _groups = new List<string>(fields.Where(f => !string.IsNullOrWhiteSpace(f)));
+            } else if (fields.Any()) {
+                foreach (var field in fields.Where(f => !string.IsNullOrWhiteSpace(f))) {
+                    _groups.Add(field);
                 }
             }
 
@@ -206,11 +213,11 @@ namespace InfluxDb.Extensions {
         /// 计算结果时，所有返回的数据都必须在查询的显式时间范围内出现，但GROUP BY间隔将基于预设的时间范围。
         /// </remarks>
         /// <returns></returns>
-        public SqlBuilder GroupByTime (int duration, string durationUnit) {
+        public SqlBuilder GroupByTime(int duration, string durationUnit) {
             if (_groups == null) {
-                _groups = new List<string> ();
+                _groups = new List<string>();
             }
-            this._groups.Add ($"time({duration}{durationUnit})");
+            this._groups.Add($"time({duration}{durationUnit})");
             return this;
         }
 
@@ -219,11 +226,11 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="duration"></param>
         /// <returns></returns>
-        public SqlBuilder GroupByTime (TimeSpan duration) {
+        public SqlBuilder GroupByTime(TimeSpan duration) {
             if (_groups == null) {
-                _groups = new List<string> ();
+                _groups = new List<string>();
             }
-            this._groups.Add ($"time({duration.ToDuration()})");
+            this._groups.Add($"time({duration.ToDuration()})");
             return this;
         }
 
@@ -232,21 +239,21 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public SqlBuilder Fill (int? value) {
+        public SqlBuilder Fill(int? value) {
             if (value.HasValue) {
-                this._fillValue = value.Value.ToString ();
+                this._fillValue = value.Value.ToString();
             } else {
                 this._fillValue = "NULL";
             }
             return this;
         }
 
-        public SqlBuilder Fill (FillType value) {
+        public SqlBuilder Fill(FillType value) {
             this._fillValue = value.ToString();
             return this;
         }
 
-        
+
 
         /// <summary>
         /// Fill with a specified value
@@ -254,7 +261,7 @@ namespace InfluxDb.Extensions {
         /// The fill value must match the data type of the column.
         /// </summary>
         /// <returns></returns>
-        public SqlBuilder FillPrevious () {
+        public SqlBuilder FillPrevious() {
             this._fillValue = "previous";
             return this;
         }
@@ -264,7 +271,7 @@ namespace InfluxDb.Extensions {
         /// </summary>
         /// <param name="timezone"></param>
         /// <returns></returns>
-        public SqlBuilder TimeZone (string timezone) {
+        public SqlBuilder TimeZone(string timezone) {
             this._timeZone = timezone;
             return this;
         }
@@ -273,7 +280,7 @@ namespace InfluxDb.Extensions {
         /// 使用本地时区,只能在 linux 下使用
         /// </summary>
         /// <returns></returns>
-        public SqlBuilder LocalTimeZone () {
+        public SqlBuilder LocalTimeZone() {
             this._timeZone = TimeZoneInfo.Local.Id;
             return this;
         }
@@ -283,9 +290,31 @@ namespace InfluxDb.Extensions {
         /// "Count({field}) AS COUNT"
         /// </summary>
         /// <returns></returns>
-        public string ToCount () {
-            var field = this._fields.First ();
+        public string ToCount() {
+            var field = this._fields.First();
             return $"SELECT COUNT({field}) AS COUNT From {_table} {ToWhereClause()}";
+        }
+
+        /// <summary>
+        /// 增加 Limit 条件
+        /// </summary>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        public SqlBuilder Limit(int count) {
+            if (count <= 0) {
+                throw new ArgumentOutOfRangeException(nameof(count), "count 不能小于等于 0");
+            }
+            this._limitNum = count;
+            return this;
+        }
+
+        public SqlBuilder Limit(int count, int offset) {
+            if (count <= 0) {
+                throw new ArgumentOutOfRangeException(nameof(count), "count 不能小于等于 0");
+            }
+            this._limitNum = count;
+            this._limit_offset = offset;
+            return this;
         }
 
         /// <summary>
@@ -294,15 +323,16 @@ namespace InfluxDb.Extensions {
         /// <param name="count">限制返回的数量</param>
         /// <param name="offset">偏移量</param>
         /// <returns></returns>
-        public string ToLimitAndOffset (int count, int offset) {
-            var builder = BuildSql ();
-            builder.Append ($"  LIMIT {count} OFFSET {offset}").Append (ToTimeZoneClause ());
-            return builder.ToString ();
+        [Obsolete("使用 Limit(n)")]
+        public string ToLimitAndOffset(int count, int offset) {
+            var builder = BuildSql();
+            builder.Append($"  LIMIT {count} OFFSET {offset}").Append(ToTimeZoneClause());
+            return builder.ToString();
         }
 
-        private string ToWhereClause () {
-            if (_whereClause != null && _whereClause.Any ()) {
-                return $"\n\tWHERE {string.Join (" AND ", _whereClause)}";
+        private string ToWhereClause() {
+            if (_whereClause != null && _whereClause.Any()) {
+                return $"\n\tWHERE {string.Join(" AND ", _whereClause)}";
             }
             return string.Empty;
         }
@@ -312,8 +342,8 @@ namespace InfluxDb.Extensions {
         /// if not define timezone, return empty string
         /// </summary>
         /// <returns></returns>
-        private string ToTimeZoneClause () {
-            if (!string.IsNullOrWhiteSpace (_timeZone)) {
+        private string ToTimeZoneClause() {
+            if (!string.IsNullOrWhiteSpace(_timeZone)) {
                 return $" tz('{_timeZone}')";
             }
             return string.Empty;
@@ -323,13 +353,13 @@ namespace InfluxDb.Extensions {
         /// Get Order by Clause ,if not define order ,return empty string
         /// </summary>
         /// <returns></returns>
-        private string ToOrderClause () {
-            if (_orderbyClause != null && _orderbyClause.Any ()) {
-                return $"\n\tOrder By {string.Join (",", _orderbyClause.Distinct ())}";
+        private string ToOrderClause() {
+            if (_orderbyClause != null && _orderbyClause.Any()) {
+                return $"\n\tOrder By {string.Join(",", _orderbyClause.Distinct())}";
             }
 
-            if (_orderbyDescClause != null && _orderbyDescClause.Any ()) {
-                return $"\n\tOrder By {string.Join (",", _orderbyDescClause.Distinct ())} DESC ";
+            if (_orderbyDescClause != null && _orderbyDescClause.Any()) {
+                return $"\n\tOrder By {string.Join(",", _orderbyDescClause.Distinct())} DESC ";
             }
             return string.Empty;
         }
@@ -338,44 +368,51 @@ namespace InfluxDb.Extensions {
         /// 构建 Sql 语句, 不包括 时区子句
         /// </summary>
         /// <returns></returns>
-        private StringBuilder BuildSql () {
-            var builder = new StringBuilder ("SELECT ");
-            if (_fields == null || !_fields.Any ()) {
-                builder.Append (" * ");
+        private StringBuilder BuildSql() {
+            var builder = new StringBuilder("SELECT ");
+            if (_fields == null || !_fields.Any()) {
+                builder.Append(" * ");
             } else {
-                builder.Append (string.Join (",", _fields));
+                builder.Append(string.Join(",", _fields));
             }
-            if (string.IsNullOrWhiteSpace (_table)) {
-                throw new NullReferenceException (nameof (_table));
+            if (string.IsNullOrWhiteSpace(_table)) {
+                throw new NullReferenceException(nameof(_table));
             }
-            builder.Append ("\n\tFROM ").Append (_table);
+            builder.Append("\n\tFROM ").Append(_table);
 
-            if (_whereClause != null && _whereClause.Any ()) {
-                builder.Append ("\n\tWHERE ").Append (string.Join (" AND ", _whereClause));
+            if (_whereClause != null && _whereClause.Any()) {
+                builder.Append("\n\tWHERE ").Append(string.Join(" AND ", _whereClause));
             }
-            if (_orderbyClause != null && _orderbyClause.Any ()) {
-                builder.Append ("\n\tOrder By ").Append (string.Join (",", _orderbyClause.Distinct ()));
-            }
-
-            if (_orderbyDescClause != null && _orderbyDescClause.Any ()) {
-                builder.Append ("\n\tOrder By ").Append (string.Join (",", _orderbyDescClause.Distinct ()));
-                builder.Append (" DESC ");
+            if (_orderbyClause != null && _orderbyClause.Any()) {
+                builder.Append("\n\tOrder By ").Append(string.Join(",", _orderbyClause.Distinct()));
             }
 
-            if (_groups != null && _groups.Any ()) {
-                builder.Append ("\n\tGROUP BY ").Append (string.Join (",", _groups));
+            if (_orderbyDescClause != null && _orderbyDescClause.Any()) {
+                builder.Append("\n\tOrder By ").Append(string.Join(",", _orderbyDescClause.Distinct()));
+                builder.Append(" DESC ");
+            }
 
-                if (!string.IsNullOrWhiteSpace (_fillValue)) {
-                    builder.AppendFormat (" FILL({0})", _fillValue);
+            if (_groups != null && _groups.Any()) {
+                builder.Append("\n\tGROUP BY ").Append(string.Join(",", _groups));
+
+                if (!string.IsNullOrWhiteSpace(_fillValue)) {
+                    builder.AppendFormat(" FILL({0})", _fillValue);
+                }
+            }
+
+            if (_limitNum != null) {
+                builder.AppendFormat(" LIMIT {0}", _limitNum);
+                if (_limit_offset != null) {
+                    builder.AppendFormat(" OFFSET {0}", _limit_offset);
                 }
             }
 
             return builder;
         }
 
-        public override string ToString () {
-            var builder = BuildSql ().Append (ToTimeZoneClause ());
-            return builder.ToString ();
+        public override string ToString() {
+            var builder = BuildSql().Append(ToTimeZoneClause());
+            return builder.ToString();
         }
     }
 }
