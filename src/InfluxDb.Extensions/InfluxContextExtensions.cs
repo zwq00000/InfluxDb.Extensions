@@ -3,7 +3,8 @@ using InfluxData.Net.InfluxDb;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace InfluxDb.Extensions {
+namespace InfluxDb.Extensions
+{
     public static class InfluxContextExtensions {
 
         /// <summary>

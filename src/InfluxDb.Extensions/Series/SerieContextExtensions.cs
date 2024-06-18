@@ -4,25 +4,41 @@ using System.Linq;
 using System.Threading.Tasks;
 using InfluxData.Net.InfluxDb.Models.Responses;
 
-namespace InfluxDb.Extensions
-{
+namespace InfluxDb.Extensions {
     /// <summary>
     /// Influx Serial Query 扩展方法
     /// </summary>
     public static class SerieContextExtensions {
         /// <summary>
-        /// 构建查询
+        /// 自定义 字段 构建查询
+        /// 如果指定 <paramref name="fields"/>则使用自定义字段列表
+        /// 如果不指定 <paramref name="fields"/> 则 使用 <see cref="ISerieContext.Tags"/> + <see cref="ISerieContext.Fields"/> 作为查询字段 构建查询
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="fields">自定义字段列表</param>
+        /// <returns></returns>
+        public static SqlBuilder BuildQuery (this ISerieContext context, params string[] fields) {
+            if (fields.Length > 0) {
+                fields = context.Tags.Concat (context.Fields).ToArray ();
+            }
+            return new SqlBuilder (fields, context.Measurement)
+                .TimeZone (context.TimeZone);
+        }
+
+        /// <summary>
+        /// 使用 <see cref="ISerieContext.Fields"/> 构造 查询
+        /// 如果 没有指定 <paramref name="tags"/> 则使用 <see cref="ISerieContext.Tags"/> 作为标签
         /// </summary>
         /// <param name="context"></param>
         /// <param name="tags"></param>
         /// <returns></returns>
-        public static SqlBuilder BuildQuery (this ISerieContext context, params string[] tags) {
-            IEnumerable<string> fields;
-            if (tags.Length > 0) {
-                fields = tags;
-            } else {
-                fields = context.Fields;;
+        public static SqlBuilder BuildQueryWithTags (this ISerieContext context, params string[] tags) {
+            if (tags.Length == 0) {
+                tags = context.Tags.ToArray ();
             }
+
+            IEnumerable<string> fields = tags.Concat (context.Fields);
+
             return new SqlBuilder (fields, context.Measurement)
                 .TimeZone (context.TimeZone);
         }
